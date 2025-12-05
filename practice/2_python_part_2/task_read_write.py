@@ -13,3 +13,20 @@ Example:
 
     result.txt(content: "23, 78, 3")
 """
+
+content = []
+
+for i in range(20):
+    f = open(f'./files/file_{i+1}.txt', 'r', encoding="utf-8")
+    text = f.read()
+    content.append(text)
+    print(f'file_{i+1}.txt (content: "{text}")')
+    f.close()
+
+f = open('./files/result.txt', 'w', encoding="utf-8")
+f.write(', '.join(content))
+f.close()
+
+f = open('./files/result.txt', 'r', encoding="utf-8")
+print(f'result.txt (content: "{f.read()}"')
+f.close()
