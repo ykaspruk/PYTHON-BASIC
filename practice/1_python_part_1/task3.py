@@ -16,4 +16,11 @@ from typing import Iterable
 
 
 def build_from_unique_words(*lines: Iterable[str], word_number: int) -> str:
-    ...
+    fin_str = []
+    for line in lines:
+        if len(line) != 0 and word_number < len(line):
+            words = list(dict.fromkeys(line.split()))
+            fin_str.append(words[word_number])
+
+    return ' '.join(fin_str)
+
