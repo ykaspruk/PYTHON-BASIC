@@ -24,12 +24,12 @@ def generate_words(n=20):
         words.append(word)
 
     content1 = "\n".join(words)
-    file1 = open("file1.txt", "w", encoding="utf-8", newline="\n")
+    file1 = open("./files/file1.txt", "w", encoding="utf-8", newline="\n")
     file1.write(content1)
     file1.close()
 
     content2 = ",".join(words[::-1])
-    file2 = open("file2.txt", "w", encoding="cp1252", newline="")
+    file2 = open("./files/file2.txt", "w", encoding="cp1252", newline="")
     file2.write(content2)
     file2.close()
 
