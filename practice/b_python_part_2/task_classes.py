@@ -25,6 +25,7 @@ Methods:
     Note that this method doesn't need object itself
 PEP8 comply strictly.
 """
+
 import datetime
 
 
@@ -54,15 +55,12 @@ class Homework:
     def __init__(self, text, days_to_complete):
         self.text = text
         self.days_to_complete = days_to_complete
-        self.created: datetime = datetime.datetime.now()
-        self.deadline: datetime = self.created + datetime.timedelta(days=days_to_complete)
+        self.created = datetime.datetime.now()
+        self.deadline = self.created + datetime.timedelta(days=days_to_complete)
 
 
     def is_active(self):
-        if self.deadline > datetime.datetime.now():
-            return True
-        else:
-            return False
+        return self.deadline > datetime.datetime.now()
 
 
 

@@ -1,5 +1,5 @@
 """
-Write tests for 2_python_part_2/task_read_write.py task.
+Write tests for b_python_part_2/task_read_write.py task.
 To write files during tests use temporary files:
 https://docs.python.org/3/library/tempfile.html
 https://docs.pytest.org/en/6.2.x/tmpdir.html
@@ -8,7 +8,7 @@ https://docs.pytest.org/en/6.2.x/tmpdir.html
 import sys
 from pathlib import Path
 
-relative_module_path = Path('practice') / '2_python_part_2'
+relative_module_path = Path('practice') / 'b_python_part_2'
 
 absolute_module_dir = Path.cwd() / relative_module_path
 
