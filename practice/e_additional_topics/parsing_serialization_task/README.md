@@ -66,5 +66,5 @@ All decimal values must be rounded to 2 decimal places.
 [example](./tests/example_result.xml)
 
 ### Validation
-You could use [check_result function](./tests/validate_xml.py) to validate your output XML. 
+You could use [check_result function](validate_xml.py) to validate your output XML. 
 Also, you could use the dataset with example data to compare your result with our XML example.
