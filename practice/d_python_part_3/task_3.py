@@ -13,9 +13,6 @@ import re
 
 
 def is_http_domain(domain: str) -> bool:
-    ...
+    pattern = r"^(https?:\/\/)([\w-]+\.)+([a-z]{2,})\/?$"
 
-
-"""
-write tests for is_http_domain function
-"""
+    return bool(re.fullmatch(pattern, domain, re.IGNORECASE))

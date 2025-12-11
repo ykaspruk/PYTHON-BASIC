@@ -6,21 +6,37 @@ Examples:
      200, 'response data'
 """
 from typing import Tuple
+from urllib.request import urlopen, Request
+from urllib.error import URLError, HTTPError
+import ssl
 
 
 def make_request(url: str) -> Tuple[int, str]:
-    ...
+    """
+    Makes an HTTP request to the given URL and returns the status code
+    and decoded response data.
 
+    :param url: The URL to request.
+    :return: A tuple (status_code, decoded_data).
+    """
 
-"""
-Write test for make_request function
-Use Mock for mocking request with urlopen https://docs.python.org/3/library/unittest.mock.html#unittest.mock.Mock
-Example:
-    >>> m = Mock()
-    >>> m.method.return_value = 200
-    >>> m.method2.return_value = b'some text'
-    >>> m.method()
-    200
-    >>> m.method2()
-    b'some text'
-"""
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+
+    req = Request(url)
+
+    try:
+        with urlopen(req, context=ssl_context) as response:
+            status_code = response.getcode()
+            data = response.read().decode('utf-8')
+
+            return status_code, data
+
+    except HTTPError as e:
+        error_status_code = e.code
+        error_data = e.read().decode('utf-8')
+        return error_status_code, error_data
+
+    except URLError as e:
+        return 0, f"URL Error: {e.reason}"
