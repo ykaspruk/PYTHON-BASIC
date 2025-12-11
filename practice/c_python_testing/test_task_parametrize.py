@@ -11,7 +11,13 @@ Task:
 """
 
 
+import pytest
+
+
 def fibonacci_1(n):
+    if n <= 0:
+        return 0
+
     a, b = 0, 1
     for _ in range(n-1):
         a, b = b, a + b
@@ -19,7 +25,31 @@ def fibonacci_1(n):
 
 
 def fibonacci_2(n):
+    if n <= 1:
+        return n
+
     fibo = [0, 1]
-    for i in range(1, n+1):
+    for i in range(2, n+1):
         fibo.append(fibo[i-1] + fibo[i-2])
     return fibo[n]
+
+
+FIB_TEST_CASES = [
+    (0, 0),
+    (1, 1),
+    (2, 1),
+    (3, 2),
+    (4, 3),
+    (5, 5),
+    (6, 8),
+    (7, 13),
+]
+
+
+@pytest.mark.parametrize("n, expected", FIB_TEST_CASES)
+def test_fibonacci_1(n, expected):
+    assert fibonacci_1(n) == expected
+
+@pytest.mark.parametrize("n, expected", FIB_TEST_CASES)
+def test_fibonacci_2(n, expected):
+    assert fibonacci_2(n) == expected

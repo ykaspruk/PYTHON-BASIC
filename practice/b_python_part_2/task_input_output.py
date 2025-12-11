@@ -24,6 +24,8 @@ def read_numbers(n: int) -> str:
         text = input()
         try:
             nums.append(int(text))
+        except ValueError:
+            pass
         except TypeError:
             pass
 

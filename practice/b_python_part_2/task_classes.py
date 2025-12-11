@@ -29,6 +29,15 @@ PEP8 comply strictly.
 import datetime
 
 
+_datetime_now_source = datetime.datetime.now
+
+def current_time_now():
+    return _datetime_now_source()
+
+def set_time_source(new_source):
+    global _datetime_now_source
+    _datetime_now_source = new_source
+
 class Teacher:
     def __init__(self, last_name, first_name):
         self.last_name = last_name
@@ -44,7 +53,7 @@ class Student:
         self.first_name = first_name
 
     def do_homework(self, homework):
-        if homework.deadline < datetime.datetime.now():
+        if homework.deadline < current_time_now():
             print('You are late')
             return None
         else:
@@ -55,12 +64,12 @@ class Homework:
     def __init__(self, text, days_to_complete):
         self.text = text
         self.days_to_complete = days_to_complete
-        self.created = datetime.datetime.now()
+        self.created = current_time_now()
         self.deadline = self.created + datetime.timedelta(days=days_to_complete)
 
 
     def is_active(self):
-        return self.deadline > datetime.datetime.now()
+        return self.deadline > current_time_now()
 
 
 
