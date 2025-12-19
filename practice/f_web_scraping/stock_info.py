@@ -34,7 +34,6 @@ import requests
 from bs4 import BeautifulSoup
 import time
 
-# --- Configuration ---
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 }
@@ -50,7 +49,7 @@ def get_most_active_tickers():
             cells = row.find_all('td')
             if len(cells) > 1:
                 tickers.append((cells[0].text.strip(), cells[1].text.strip()))
-        return tickers[:15] # Limit for demo speed
+        return tickers
     except Exception as e:
         print(f"Failed to get ticker list: {e}")
         return []
@@ -69,13 +68,26 @@ def scrape_stock_all_tabs(driver, symbol, name):
     data = {
         "Name": name, "Code": symbol, "Country": "N/A", "Employees": "N/A",
         "CEO Name": "N/A", "CEO Year Born": None,
-        "52-Week Change": "N/A", "Total Cash": "N/A", "Holders": []
+        "52-Week Change": "N/A", "Total Cash": "N/A",
+        "Blackrock_Holding": None
     }
 
     # 1. Profile Tab
     driver.get(f"https://finance.yahoo.com/quote/{symbol}/profile")
     time.sleep(2)
     try:
+        address_div = driver.find_element(By.CSS_SELECTOR, "div.address")
+        inner_divs = address_div.find_elements(By.TAG_NAME, "div")
+        if inner_divs:
+            data["Country"] = inner_divs[-1].text.strip()
+
+        stats_list = driver.find_element(By.CSS_SELECTOR, "dl.company-stats")
+        stats_text = stats_list.text
+        if "Full Time Employees" in stats_text:
+            emp_element = stats_list.find_element(By.XPATH,
+                                                  ".//dt[contains(., 'Full Time Employees')]/following-sibling::dd/strong")
+            data["Employees"] = emp_element.text.strip()
+
         profile_rows = driver.find_elements(By.CSS_SELECTOR, "table tbody tr")
         for row in profile_rows:
             cols = row.find_elements(By.TAG_NAME, "td")
@@ -83,11 +95,8 @@ def scrape_stock_all_tabs(driver, symbol, name):
                 data["CEO Name"] = cols[0].text
                 data["CEO Year Born"] = cols[4].text if cols[4].text.isdigit() else "N/A"
                 break
-        desc = driver.find_element(By.CLASS_NAME, "asset-profile").text
-        if "United States" in desc: data["Country"] = "United States"
-        for line in desc.split("\n"):
-            if "Full Time Employees" in line: data["Employees"] = line.split(":")[-1].strip()
-    except: pass
+    except Exception as e:
+        print(f"Error scraping Profile for {symbol}: {e}")
 
     # 2. Statistics Tab
     driver.get(f"https://finance.yahoo.com/quote/{symbol}/key-statistics")
@@ -105,16 +114,21 @@ def scrape_stock_all_tabs(driver, symbol, name):
     driver.get(f"https://finance.yahoo.com/quote/{symbol}/holders")
     time.sleep(2)
     try:
-        # Targeting the 'Institutional Holders' table
+        # Find all rows in the institutional holders table
         h_rows = driver.find_elements(By.XPATH, "//table[contains(., 'Date Reported')]//tbody//tr")
-        for row in h_rows[:10]:
-            cols = row.find_elements(By.TAG_NAME, "td")
-            if len(cols) >= 5:
-                data["Holders"].append({
-                    "Name": cols[0].text, "Code": symbol,
-                    "Shares": cols[1].text, "Date Reported": cols[2].text,
-                    "% Out": cols[3].text, "Value": cols[4].text
-                })
+        for row in h_rows:
+            if "Blackrock" in row.text:
+                cols = row.find_elements(By.TAG_NAME, "td")
+                if len(cols) >= 5:
+                    data["Blackrock_Holding"] = {
+                        "Name": name,
+                        "Code": symbol,
+                        "Shares": cols[1].text,
+                        "Date Reported": cols[2].text,
+                        "% Out": cols[3].text,
+                        "Value": cols[4].text
+                    }
+                break
     except: pass
 
     return data
@@ -126,16 +140,10 @@ def run_report():
     results = []
 
     try:
-        # 1. Scrape the Most Active stocks
+        # Scrape the Most Active stocks
         for symbol, name in active_stocks:
             print(f"Scraping all tabs for: {symbol}...")
             results.append(scrape_stock_all_tabs(driver, symbol, name))
-
-        # 2. Specifically fetch BLK if it wasn't in the active list
-        blk_data = next((r for r in results if r["Code"] == "BLK"), None)
-        if not blk_data:
-            print("BLK not in active list. Fetching BLK specifically for Sheet 3...")
-            blk_data = scrape_stock_all_tabs(driver, "BLK", "BlackRock, Inc.")
 
         # --- Rendering Sheets ---
 
@@ -156,16 +164,21 @@ def run_report():
         render_table("10 stocks with best 52-Week Change", best_gainers,
                      ["Name", "Code", "52-Week Change", "Total Cash"])
 
-        # Sheet 3 (Now guaranteed to have blk_data)
-        if blk_data and blk_data["Holders"]:
-            render_table("10 largest holds of Blackrock Inc.", blk_data["Holders"],
-                         ["Name", "Code", "Shares", "Date Reported", "% Out", "Value"])
-        else:
-            print("==================== 10 largest holds of Blackrock Inc. ====================")
-            print("| No holder data found for BLK.")
+        # Sheet 3
+        blackrock_stakes = [r["Blackrock_Holding"] for r in results if r["Blackrock_Holding"]]
 
-    finally:
-        driver.quit()
+        def parse_percent(val):
+            try:
+                return float(val.replace('%', '').strip())
+            except:
+                return 0.0
+
+        blackrock_stakes = sorted(blackrock_stakes, key=lambda x: parse_percent(x["% Out"]), reverse=True)[:10]
+
+        render_table("10 most active stocks with largest Blackrock Inc. holdings", blackrock_stakes,
+                     ["Name", "Code", "Shares", "Date Reported", "% Out", "Value"])
+
+    finally: driver.quit()
 
 def render_table(title, rows, fields):
     print(f"\n{title.center(100, '=')}")
