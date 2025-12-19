@@ -16,7 +16,7 @@ def get_apod_metadata(start_date: str, end_date: str, api_key: str) -> list:
     }
     try:
         response = requests.get(APOD_ENDPOINT, params=params)
-        response.raise_for_status()  # Raise error for bad status codes
+        response.raise_for_status()  # Raise error for bad status
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"Error fetching metadata: {e}")
@@ -28,7 +28,7 @@ def download_single_image(item: dict):
         url = item.get('hdurl') or item.get('url')
         date = item.get('date')
 
-        # Determine file extension from URL (usually .jpg)
+        # Determine file extension from URL
         ext = os.path.splitext(url)[1]
         if not ext:
             ext = ".jpg"
@@ -51,7 +51,7 @@ def download_apod_images(metadata: list):
 
     print(f"Starting download of {len(metadata)} potential images...")
 
-    # Using 10 threads to speed up the process
+    # Using 10 threads
     with ThreadPoolExecutor(max_workers=10) as executor:
         executor.map(download_single_image, metadata)
 

@@ -60,7 +60,7 @@ def func2(result_file: str):
     with ThreadPoolExecutor() as executor:
         results = list(executor.map(read_fib_file, files))
 
-    # Write the results to the CSV file
+    # Write results to CSV
     with open(result_file, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         for row in results:
